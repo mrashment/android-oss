@@ -25,14 +25,17 @@ import com.kickstarter.ui.data.ProjectData
 import com.kickstarter.viewmodels.BackingFragmentViewModel
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.fragment_backing.*
+import kotlinx.android.synthetic.main.fragment_backing_section_bonus.*
+import kotlinx.android.synthetic.main.fragment_backing_section_reward_delivery.*
 import kotlinx.android.synthetic.main.fragment_backing_section_summary_total.*
 import kotlinx.android.synthetic.main.fragment_pledge_section_summary_pledge.*
 import kotlinx.android.synthetic.main.fragment_pledge_section_summary_shipping.*
+import kotlinx.android.synthetic.main.fragment_pledge_section_summary_shipping.shipping_summary
 import kotlinx.android.synthetic.main.item_reward.*
 import kotlinx.android.synthetic.main.reward_card_details.*
 
 @RequiresFragmentViewModel(BackingFragmentViewModel.ViewModel::class)
-class BackingFragment: BaseFragment<BackingFragmentViewModel.ViewModel>(), RewardAndAddOnsAdapter.ViewListener {
+class BackingFragment : BaseFragment<BackingFragmentViewModel.ViewModel>(), RewardAndAddOnsAdapter.ViewListener {
 
     private var rewardsAndAddOnsAdapter = RewardAndAddOnsAdapter(this)
 
@@ -138,7 +141,7 @@ class BackingFragment: BaseFragment<BackingFragmentViewModel.ViewModel>(), Rewar
         this.viewModel.outputs.receivedCheckboxChecked()
                 .compose(bindToLifecycle())
                 .compose(Transformers.observeForUI())
-                .subscribe { mark_as_received_checkbox.isChecked = it }
+                .subscribe { estimated_delivery_checkbox.isChecked = it }
 
         this.viewModel.outputs.receivedSectionIsGone()
                 .compose(bindToLifecycle())
@@ -153,7 +156,7 @@ class BackingFragment: BaseFragment<BackingFragmentViewModel.ViewModel>(), Rewar
         this.viewModel.outputs.shippingLocation()
                 .compose(bindToLifecycle())
                 .compose(Transformers.observeForUI())
-                .subscribe { shipping_label.text = String.format("%s: %s", getString(R.string.Shipping), it)  }
+                .subscribe { shipping_label.text = String.format("%s: %s", getString(R.string.Shipping), it) }
 
         this.viewModel.outputs.shippingSummaryIsGone()
                 .compose(bindToLifecycle())
@@ -170,6 +173,12 @@ class BackingFragment: BaseFragment<BackingFragmentViewModel.ViewModel>(), Rewar
                 .compose(Transformers.observeForUI())
                 .subscribe { total_summary_amount.text = it }
 
+        this.viewModel.outputs.bonusSupport()
+                .compose(bindToLifecycle())
+                .compose(Transformers.observeForUI())
+                .subscribe { bonus_summary_amount.text = it.toString() }
+
+
         SwipeRefresher(
                 this, backing_swipe_refresh_layout, { this.viewModel.inputs.refreshProject() }, { this.viewModel.outputs.swipeRefresherProgressIsVisible() }
         )
@@ -178,9 +187,9 @@ class BackingFragment: BaseFragment<BackingFragmentViewModel.ViewModel>(), Rewar
                 .compose(bindToLifecycle())
                 .subscribe { this.viewModel.inputs.fixPaymentMethodButtonClicked() }
 
-        RxView.clicks(mark_as_received_checkbox)
+        RxView.clicks(estimated_delivery_checkbox)
                 .compose(bindToLifecycle())
-                .subscribe { this.viewModel.inputs.receivedCheckboxToggled(mark_as_received_checkbox.isChecked) }
+                .subscribe { this.viewModel.inputs.receivedCheckboxToggled(estimated_delivery_checkbox.isChecked) }
     }
 
     fun configureWith(projectData: ProjectData) {
@@ -219,7 +228,7 @@ class BackingFragment: BaseFragment<BackingFragmentViewModel.ViewModel>(), Rewar
     private fun setCardIssuerContentDescription(cardIssuerOrStringRes: Either<String, Int>) {
         val cardIssuer = cardIssuerOrStringRes.left()
         val stringRes = cardIssuerOrStringRes.right()
-        reward_card_logo.contentDescription = stringRes?.let { getString(it) }?: cardIssuer
+        reward_card_logo.contentDescription = stringRes?.let { getString(it) } ?: cardIssuer
     }
 
     private fun setCardLastFourText(lastFour: String) {
@@ -251,7 +260,7 @@ class BackingFragment: BaseFragment<BackingFragmentViewModel.ViewModel>(), Rewar
             pledgeStatusData.projectDeadline?.let { ViewUtils.addBoldSpan(spannablePledgeStatus, it) }
 
             backer_pledge_status.text = spannablePledgeStatus
-        }?: run {
+        } ?: run {
             backer_pledge_status.text = null
         }
     }
